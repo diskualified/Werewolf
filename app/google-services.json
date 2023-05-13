@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "870173790056",
+    "project_id": "ait-werewolf",
+    "storage_bucket": "ait-werewolf.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:870173790056:android:3d2fce0f74b285559a90dd",
+        "android_client_info": {
+          "package_name": "hu.ait.werewolf"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "870173790056-hd5e97kpf1iuolulhuish27lrr3ritcp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBFcKKLEvfAZhZ-zXoXTuqih__egGkZFVo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "870173790056-hd5e97kpf1iuolulhuish27lrr3ritcp.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
