@@ -27,7 +27,10 @@ enum class Team {
     Werewolves
 }
 
-data class Player(val id: String, val name: String, var role: String)
+data class Player(
+    val id: String = "",
+    val name: String = "",
+    var role: String = "")
 
 data class Message(
     val id: String = "",

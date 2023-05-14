@@ -13,7 +13,7 @@ fun NavGraph(
 ) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Login.route
+        startDestination = Screen.Day.route
     ) {
         composable(Screen.Login.route) {
             LoginScreen(onLoginSuccess = {
