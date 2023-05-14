@@ -64,20 +64,6 @@ class MainScreenViewModel : ViewModel() {
         ).document(postKey).delete()
     }
 
-//    fun assignRandomRole(): Role {
-//        availableRoles: MutableList<Role>, players: List<Player>
-//        val index = (0 until availableRoles.size).random()
-//        var role = availableRoles[index]
-//
-//        while (players.any { it.role == role }) {
-//            val newIndex = (0 until availableRoles.size).random()
-//            role = availableRoles[newIndex]
-//        }
-//
-//        availableRoles.removeAt(index)
-//        return role
-//    }
-
     fun uploadRole(role: String) {
         var r = ""
         if (role.trim().lowercase() !in allRolesStr) {

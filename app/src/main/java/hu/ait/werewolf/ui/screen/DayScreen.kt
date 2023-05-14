@@ -35,13 +35,11 @@ fun DayScreen(
         // Screen content
         Column(modifier = Modifier.padding(contentPadding)) {
             Text("Username: ${dayScreenViewModel.currentUser}")
-
             if (postListState.value == MainScreenUIState.Init) {
                 Text("initializing")
             } else if (postListState.value is MainScreenUIState.Success) {
                 //Text(text = "Messages number: " +
                 //        "${(postListState.value as MainScreenUIState.Success).postList.size}")
-
                 LazyColumn() {
                     items((postListState.value as MainScreenUIState.Success).postList.sortedBy { it.post.time }) {
                         MessageCard(

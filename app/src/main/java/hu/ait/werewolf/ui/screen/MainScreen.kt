@@ -38,7 +38,6 @@ fun MainScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val postListState =
         mainScreenViewModel.postsList().collectAsState(initial = MainScreenUIState.Init)
-    var newRole by remember { mutableStateOf("") }
     val roleListState =
         mainScreenViewModel.rolesList().collectAsState(initial = MainScreenUIState.Init)
     var expanded by remember { mutableStateOf(false) }
@@ -57,14 +56,6 @@ fun MainScreen(
         // Screen content
         Column(modifier = Modifier.padding(contentPadding)) {
             Text("Username: ${mainScreenViewModel.currentUser}")
-
-//            OutlinedTextField(value = newRole,
-//                modifier = Modifier.fillMaxWidth(),
-//                label = { Text(text = "Add Role:") },
-//                onValueChange = {
-//                    newRole = it
-//                }
-//            )
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
