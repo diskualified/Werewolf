@@ -12,6 +12,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
+import hu.ait.werewolf.data.Role
 
 @Composable
 fun NightScreen(
@@ -26,23 +27,21 @@ fun NightScreen(
         val query = collection.whereEqualTo("id", currentUserId)
 
         query.get().addOnSuccessListener {
-            Log.d("role", "here")
             for (document in it.documents) {
-                Log.d("role2", document.getString("role")!!)
                 role = document.getString("role")!!
             }
 
         }
-//    val currRoleState =
-//        nightScreenViewModel.getRole().collectAsState(initial = NightScreenUIState.Init)
-    Column() {
-//        if (currRoleState.value is NightScreenUIState.Success) {
-//            Text((currRoleState.value as NightScreenUIState.Success).role!!)
-//        }
+
+    Column {
         Text(role)
         when (role) {
-            "Villager" ->
-            "Robber" ->
+            "Villager" -> VillagerCard()
+            "Werewolf" -> {
+                Text("hi")
+                WerewolfCard()
+            }
+            "Troublemaker" -> TroublemakerCard()
         }
 
         Button(onClick = { toDay() }) {
@@ -53,10 +52,36 @@ fun NightScreen(
 
 @Composable
 fun VillagerCard() {
-
+    Text("Sleep, you are a villager")
 }
 
 @Composable
 fun WerewolfCard() {
+    var wolves by remember {
+        mutableStateOf(mutableListOf<String>())
+    }
+    var wolvesLoaded by remember {
+        mutableStateOf(false)
+    }
+    val collection = FirebaseFirestore.getInstance().collection("players")
+    val query = collection.whereEqualTo("role", "Werewolf")
+
+    query.get().addOnSuccessListener {
+        for (document in it.documents) {
+            wolves.add(document.getString("name")!!)
+        }
+        wolvesLoaded = true
+    }
+    if (wolvesLoaded) {
+        LazyColumn() {
+            items(wolves) {
+                Text(it)
+            }
+        }
+    }
+}
+
+@Composable
+fun TroublemakerCard() {
 
 }

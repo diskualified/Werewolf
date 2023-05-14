@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.callbackFlow
 sealed interface DayScreenUIState {
     object Init : DayScreenUIState
 
-    data class Success(val postList: List<PostWithId>) : DayScreenUIState
+    data class Success(val playerNames: List<String>) : DayScreenUIState
     data class Error(val error: String?) : DayScreenUIState
 }
 
@@ -27,21 +27,21 @@ class DayScreenViewModel : ViewModel() {
         currentUserId = Firebase.auth.currentUser!!.uid
     }
 
-    fun postsList() = callbackFlow {
+    fun playerList() = callbackFlow {
         val snapshotListener =
-            FirebaseFirestore.getInstance().collection(WritePostViewModel.COLLECTION_POSTS)
+            FirebaseFirestore.getInstance().collection("players")
                 .addSnapshotListener() { snapshot, e ->
                     val response = if (snapshot != null) {
-                        val postList = snapshot.toObjects(Post::class.java)
-                        val postWithIdList = mutableListOf<PostWithId>()
-                        postList.forEachIndexed { index, post ->
-                            postWithIdList.add(PostWithId(snapshot.documents[index].id, post))
+                        val playerList = snapshot.toObjects(Player::class.java)
+                        val playerNames = mutableListOf<String>()
+                        playerList.forEachIndexed { index, player ->
+                            playerNames.add(player.name)
                         }
-                        MainScreenUIState.Success(
-                            postWithIdList
+                        DayScreenUIState.Success(
+                            playerNames
                         )
                     } else {
-                        MainScreenUIState.Error(e?.message.toString())
+                        DayScreenUIState.Error(e?.message.toString())
                     }
 
                     trySend(response)
