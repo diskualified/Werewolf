@@ -73,7 +73,6 @@ class MainScreenViewModel : ViewModel() {
         }
         val newRole = availableRole(
             uid = currentUserId,
-            player = "None",
             role = r
         )
         val rolesCollection = FirebaseFirestore.getInstance().collection("roles")

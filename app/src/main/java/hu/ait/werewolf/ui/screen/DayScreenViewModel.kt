@@ -1,6 +1,8 @@
 package hu.ait.werewolf.ui.screen
 
 import android.util.Log
+import androidx.compose.runtime.*
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -14,7 +16,7 @@ sealed interface DayScreenUIState {
     object Init : DayScreenUIState
 
     data class Success(val playerNames: List<String>) : DayScreenUIState
-    data class Success2(val maxUser: String) : DayScreenUIState
+    data class Success2(val res: String) : DayScreenUIState
 
     data class Error(val error: String?) : DayScreenUIState
 }
@@ -54,63 +56,48 @@ class DayScreenViewModel : ViewModel() {
     }
 
     fun addVote(email : String) {
-        val collection = FirebaseFirestore.getInstance().collection("votes")
+        val collection = FirebaseFirestore.getInstance().collection("players")
         val query = collection.whereEqualTo("name", email)
         query.get().addOnSuccessListener {
-            if (it.documents.size == 0) {
-                val vote = Vote(
-                    name = email,
-                    count = "1"
-                )
-                collection.add(vote)
-            } else {
-                for (document in it.documents) {
-                    val tmp = document.getString("count")!!.toInt() + 1
-                    collection.document(document.id).update("count", tmp.toString())
-                }
+            for (document in it.documents) {
+                val tmp = document.getString("votes")!!.toInt() + 1
+                collection.document(document.id).update("votes", tmp.toString())
             }
         }
-    }
-
-    fun countVotes(): Int {
-        var count = 0
-        val collection = FirebaseFirestore.getInstance().collection("votes")
-        collection.get()
-            .addOnSuccessListener { querySnapshot ->
-                for (document in querySnapshot) {
-                    val documentData = document.data
-                    count += documentData["count"] as Int
-                }
-            }
-            .addOnFailureListener { e ->
-                // Error occurred while retrieving the collection
-            }
-        return count
     }
 
     fun findMaxVotes() =
         callbackFlow {
             val snapshotListener =
-                FirebaseFirestore.getInstance().collection("votes")
+                FirebaseFirestore.getInstance().collection("players")
                     .addSnapshotListener() { snapshot, e ->
                         val response = if (snapshot != null) {
-                            val voteList = snapshot.toObjects(Vote::class.java)
+                            val voteList = snapshot.toObjects(Player::class.java)
                             var maxCount = 0
                             var maxUser = ""
-                            voteList.forEachIndexed { index, vote ->
-                                val tmp = vote.count.toInt()
+                            var res = ""
+                            voteList.forEachIndexed { index, player ->
+                                val tmp = player.votes.toInt()
                                 if (tmp > maxCount) {
                                     maxCount = tmp
-                                    maxUser = vote.name
+                                    maxUser = player.name
+                                }
+                            }
+                            voteList.forEach { player ->
+                                if (player.name == maxUser) {
+                                    if (player.role == "Werewolf") {
+                                        res = "Villagers Win"
+                                    } else {
+                                        res = "Werewolves Win"
+                                    }
                                 }
                             }
                             DayScreenUIState.Success2(
-                                maxUser
+                                res
                             )
                         } else {
                             DayScreenUIState.Error(e?.message.toString())
                         }
-
                         trySend(response)
                     }
             awaitClose {
@@ -118,41 +105,33 @@ class DayScreenViewModel : ViewModel() {
             }
         }
 
-//        var maxUser = ""
-//        var maxCount = 0
-//        val collection = FirebaseFirestore.getInstance().collection("votes")
-//        val snapshotListener =
-//        collection.get()
-//            .addOnSuccessListener { querySnapshot ->
-//                for (document in querySnapshot) {
-//                    val documentData = document.data
-//                    val tmp = documentData["count"] as Int
-//                    if (tmp > maxCount) {
-//                        maxCount = tmp
-//                        maxUser = documentData["name"] as String
-//                    }
-//                }
-//            }
-//            .addOnFailureListener { e ->
-//                // Error occurred while retrieving the collection
-//            }
-//        return maxUser
-//    }
-
-    fun getResult(user : String): String {
-        var role = ""
-        val collection = FirebaseFirestore.getInstance().collection("players")
-        val query = collection.whereEqualTo("name", user)
-        query.get().addOnSuccessListener {
-            for (document in it.documents) {
-                role = document.getString("role")!!
+    fun getResult(user : String) =
+        callbackFlow {
+            val snapshotListener =
+            FirebaseFirestore.getInstance().collection("players")
+                .addSnapshotListener() { snapshot, e ->
+                    val response = if (snapshot != null) {
+                        var msg = ""
+                        val playerList = snapshot.toObjects(Player::class.java)
+                        playerList.forEachIndexed { index, player ->
+                            if (player.name == user) {
+                                if (player.role == "Werewolf") {
+                                    msg = "Villagers Win"
+                                } else {
+                                    msg = "Werewolves Win"
+                                }
+                            }
+                        }
+                        DayScreenUIState.Success2(
+                            msg
+                        )
+                    } else {
+                        DayScreenUIState.Error(e?.message.toString())
+                    }
+                    trySend(response)
+                }
+            awaitClose {
+                snapshotListener.remove()
             }
         }
-        if (role == "Werewolf") {
-            return "Villagers Win"
-        } else {
-            return "Werewolves Win"
-        }
-    }
-
 }

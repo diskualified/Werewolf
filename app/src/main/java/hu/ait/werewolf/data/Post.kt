@@ -21,7 +21,6 @@ data class PostWithId(
 
 data class availableRole(
     var uid: String = "",
-    var player: String = "",
     var role: String = ""
 )
 

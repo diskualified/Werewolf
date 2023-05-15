@@ -30,7 +30,9 @@ enum class Team {
 data class Player(
     val id: String = "",
     val name: String = "",
-    var role: String = "")
+    var role: String = "",
+    var votes: String = "0"
+)
 
 data class Message(
     val id: String = "",
@@ -45,8 +47,3 @@ enum class GameState {
 }
 
 data class NightAction(val playerId: Int, val targetPlayerId: Int? = null, val targetPlayerId2: Int? = null)
-
-data class Vote(
-    val name: String = "",
-    val count: String = "0"
-)
