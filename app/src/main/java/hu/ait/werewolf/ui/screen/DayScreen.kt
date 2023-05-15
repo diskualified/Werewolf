@@ -22,11 +22,11 @@ fun DayScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val playerListState =
         dayScreenViewModel.playerList().collectAsState(initial = DayScreenUIState.Init)
+    val voteState = dayScreenViewModel.findMaxVotes().collectAsState(initial = DayScreenUIState.Init)
+    var selectedOption = remember { mutableStateOf("") }
 
-    val selectedValue = remember { mutableStateOf("") }
-
-    val isSelectedItem: (String) -> Boolean = { selectedValue.value == it }
-    val onChangeState: (String) -> Unit = { selectedValue.value = it }
+//    val isSelectedItem: (String) -> Boolean = { selectedValue.value == it }
+//    val onChangeState: (String) -> Unit = { selectedValue.value = it }
 
     Scaffold(
         floatingActionButton = {
@@ -48,25 +48,28 @@ fun DayScreen(
 //                            mutableStateOf("")
 //                        }
                         Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.selectable(
-                                selected = isSelectedItem(it),
-                                onClick = { onChangeState(it) },
-                                role = Role.RadioButton
-                            ).padding(8.dp)
-                        ) {
+                            verticalAlignment = Alignment.CenterVertically) {
                             RadioButton(
-                                selected = isSelectedItem(it),
-                                onClick = null
+                                selected = selectedOption.value == it,
+                                onClick = { selectedOption.value = it },
                             )
-                            Text(
-                                text = it,
-                                modifier = Modifier.fillMaxWidth()
-                            )
+                            Text(text = it)
                         }
                     }
                 }
+                Button(
+                    onClick = {
+                        dayScreenViewModel.addVote(selectedOption.value)
+                    }
+                ) {
+                    Text("Vote")
+                }
+            }
+            if (voteState.value is DayScreenUIState.Success2) {
+                val user = (voteState.value as DayScreenUIState.Success2).maxUser
+                Text(dayScreenViewModel.getResult(user))
             }
         }
+
     }
 }
