@@ -23,9 +23,9 @@ fun NavGraph(
         composable(Screen.Main.route) {
             MainScreen(
                 // remove first arg (moved to day screen)
-                onWriteNewPostClick = {
-                navController.navigate(Screen.WritePost.route)
-            },
+//                onWriteNewPostClick = {
+//                navController.navigate(Screen.WritePost.route)
+//            },
             onLogout = {
                 navController.navigate(Screen.Login.route)
             },
@@ -34,9 +34,9 @@ fun NavGraph(
             })
         }
         composable(Screen.WritePost.route) {
-            WritePostScreen(onWritePostSuccess = {
-                navController.popBackStack(Screen.Day.route, false)
-            })
+//            WritePostScreen(onWritePostSuccess = {
+//                navController.popBackStack(Screen.Day.route, false)
+//            })
         }
         composable(Screen.Night.route) {
             NightScreen(toDay = {
@@ -45,9 +45,9 @@ fun NavGraph(
         }
         composable(Screen.Day.route) {
             DayScreen(
-                onWriteNewPostClick = {
-                    navController.navigate(Screen.WritePost.route)
-                },
+//                onWriteNewPostClick = {
+//                    navController.navigate(Screen.WritePost.route)
+//                },
                 onReset = {
                     navController.navigate((Screen.Main.route))
                 }

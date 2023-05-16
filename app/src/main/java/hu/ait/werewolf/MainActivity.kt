@@ -33,7 +33,16 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onStop() {
-        super.onStop()
-    }
+//    override fun onPause() {
+//        val collection = FirebaseFirestore.getInstance().collection("activeUsers")
+//        val query = collection.whereEqualTo("email", Firebase.auth.currentUser!!.email!!)
+//        query.get().addOnSuccessListener {
+//            for (document in it.documents) {
+//                collection.document(document.id).delete()
+//            }
+//        }
+//            .addOnSuccessListener { Log.d("s", "DocumentSnapshot successfully deleted!") }
+//        Firebase.auth.signOut()
+//        super.onPause()
+//    }
 }

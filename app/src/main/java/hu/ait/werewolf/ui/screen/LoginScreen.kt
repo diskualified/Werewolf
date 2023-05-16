@@ -95,16 +95,16 @@ fun LoginScreen(onLoginSuccess: () -> Unit, loginViewModel: LoginViewModel = vie
                                 onLoginSuccess()
                             }
                             val userCollection = FirebaseFirestore.getInstance().collection("activeUsers")
-//                            val documentRef = userCollection.document()
                             val user = activeUser(
                                 uid = Firebase.auth.currentUser!!.uid,
                                 email = email
                             )
-//                            val dataWithDocumentId = user.toMutableMap()
-//                            dataWithDocumentId["documentId"] = documentRef.id
+                            userCollection.whereEqualTo("uid", Firebase.auth.currentUser!!.uid).get().addOnSuccessListener {
+                                if (it.documents.size == 0) {
+                                    userCollection.add(user)
+                                }
+                            }
 
-//                            documentRef.set(dataWithDocumentId)
-                            userCollection.add(user)
                         }
                     }
                 }) {

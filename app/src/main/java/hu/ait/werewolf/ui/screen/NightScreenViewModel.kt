@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.callbackFlow
 sealed interface NightScreenUIState {
     object Init : NightScreenUIState
 
-    data class Success(val role : String?) : NightScreenUIState
+    data class Success(val playerList : List<Player>) : NightScreenUIState
     data class Error(val error: String?) : NightScreenUIState
 }
 class NightScreenViewModel : ViewModel() {
@@ -27,5 +27,23 @@ class NightScreenViewModel : ViewModel() {
         currentUserId = Firebase.auth.currentUser!!.uid
     }
 
+    fun activePlayersList() = callbackFlow {
+        val snapshotListener = FirebaseFirestore.getInstance()
+            .collection("players")
+            .addSnapshotListener { snapshot, e ->
+                val response = if (snapshot != null) {
+                    val playerList = snapshot.toObjects(Player::class.java)
+                    NightScreenUIState.Success(playerList)
+                } else {
+                    NightScreenUIState.Error(e?.message.toString())
+                }
+
+                trySend(response)
+            }
+
+        awaitClose {
+            snapshotListener.remove()
+        }
+    }
 }
 

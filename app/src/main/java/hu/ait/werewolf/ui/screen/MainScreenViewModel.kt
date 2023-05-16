@@ -34,35 +34,35 @@ class MainScreenViewModel : ViewModel() {
         currentUserId = Firebase.auth.currentUser!!.uid
     }
 
-    fun postsList() = callbackFlow {
-        val snapshotListener =
-            FirebaseFirestore.getInstance().collection(WritePostViewModel.COLLECTION_POSTS)
-                .addSnapshotListener() { snapshot, e ->
-                    val response = if (snapshot != null) {
-                        val postList = snapshot.toObjects(Post::class.java)
-                        val postWithIdList = mutableListOf<PostWithId>()
-                        postList.forEachIndexed { index, post ->
-                            postWithIdList.add(PostWithId(snapshot.documents[index].id, post))
-                        }
-                        MainScreenUIState.Success(
-                            postWithIdList
-                        )
-                    } else {
-                        MainScreenUIState.Error(e?.message.toString())
-                    }
+//    fun postsList() = callbackFlow {
+//        val snapshotListener =
+//            FirebaseFirestore.getInstance().collection(WritePostViewModel.COLLECTION_POSTS)
+//                .addSnapshotListener() { snapshot, e ->
+//                    val response = if (snapshot != null) {
+//                        val postList = snapshot.toObjects(Post::class.java)
+//                        val postWithIdList = mutableListOf<PostWithId>()
+//                        postList.forEachIndexed { index, post ->
+//                            postWithIdList.add(PostWithId(snapshot.documents[index].id, post))
+//                        }
+//                        MainScreenUIState.Success(
+//                            postWithIdList
+//                        )
+//                    } else {
+//                        MainScreenUIState.Error(e?.message.toString())
+//                    }
+//
+//                    trySend(response)
+//                }
+//        awaitClose {
+//            snapshotListener.remove()
+//        }
+//    }
 
-                    trySend(response)
-                }
-        awaitClose {
-            snapshotListener.remove()
-        }
-    }
-
-    fun deletePost(postKey: String) {
-        FirebaseFirestore.getInstance().collection(
-            WritePostViewModel.COLLECTION_POSTS
-        ).document(postKey).delete()
-    }
+//    fun deletePost(postKey: String) {
+//        FirebaseFirestore.getInstance().collection(
+//            WritePostViewModel.COLLECTION_POSTS
+//        ).document(postKey).delete()
+//    }
 
     fun uploadRole(role: String) {
         var r = ""
@@ -175,5 +175,19 @@ class MainScreenViewModel : ViewModel() {
         Firebase.auth.signOut()
     }
 
+    fun deleteRoles() {
+        val collection = FirebaseFirestore.getInstance().collection("players")
+        collection.get().addOnSuccessListener {
+            for (document in it.documents) {
+                collection.document(document.id).delete()
+            }
+        }
+        val collection2 = FirebaseFirestore.getInstance().collection("roles")
+        collection2.get().addOnSuccessListener {
+            for (document in it.documents) {
+                collection2.document(document.id).delete()
+            }
+        }
+    }
 
 }

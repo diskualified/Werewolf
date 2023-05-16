@@ -18,10 +18,12 @@ import com.google.firebase.firestore.FirebaseFirestore
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DayScreen(
-    onWriteNewPostClick: () -> Unit = {},
     onReset: () -> Unit = {},
     dayScreenViewModel:DayScreenViewModel = viewModel()
 ) {
+    // This state will track whether the ChatUI is expanded or collapsed
+    var isChatUIExpanded by remember { mutableStateOf(false) }
+
     val voteState = dayScreenViewModel.findMaxVotes().collectAsState(initial = DayScreenUIState.Init)
     val snackbarHostState = remember { SnackbarHostState() }
     val playerListState =
@@ -38,77 +40,79 @@ fun DayScreen(
 //    val isSelectedItem: (String) -> Boolean = { selectedValue.value == it }
 //    val onChangeState: (String) -> Unit = { selectedValue.value = it }
 
-    Scaffold(
-        floatingActionButton = {
-            MainFloatingActionButton(
-                onWriteNewPostClick = onWriteNewPostClick,
-                snackbarHostState = snackbarHostState
-            )
-        }
-    ) { contentPadding ->
+    Scaffold { contentPadding ->
         // Screen content
         Column(modifier = Modifier.padding(contentPadding)) {
-            Text("Username: ${dayScreenViewModel.currentUser}")
-            if (playerListState.value == DayScreenUIState.Init) {
-                Text("initializing")
-            } else if (playerListState.value is DayScreenUIState.Success) {
-                playerCount = (playerListState.value as DayScreenUIState.Success).playerNames.size
-                LazyColumn() {
-                    items((playerListState.value as DayScreenUIState.Success).playerNames) {
+            Column(modifier = Modifier.weight(if (isChatUIExpanded) 0.05f else 1.0f)) {
+                Text("Username: ${dayScreenViewModel.currentUser}")
+                if (playerListState.value == DayScreenUIState.Init) {
+                    Text("initializing")
+                } else if (playerListState.value is DayScreenUIState.Success) {
+                    playerCount =
+                        (playerListState.value as DayScreenUIState.Success).playerNames.size
+                    LazyColumn() {
+                        items((playerListState.value as DayScreenUIState.Success).playerNames) {
 //                        var selectedOption by remember {
 //                            mutableStateOf("")
 //                        }
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically) {
-                            RadioButton(
-                                selected = selectedOption.value == it,
-                                onClick = { selectedOption.value = it },
-                            )
-                            Text(text = it)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                RadioButton(
+                                    selected = selectedOption.value == it,
+                                    onClick = { selectedOption.value = it },
+                                )
+                                Text(text = it)
+                            }
                         }
                     }
-                }
-                Button(
-                    onClick = {
-                        currCount = 1
-                        collection.get()
-                            .addOnSuccessListener { querySnapshot ->
-                                for (document in querySnapshot) {
-                                    val documentData = document.data
-                                    currCount += (documentData["votes"] as String).toInt()
+                    Button(
+                        onClick = {
+                            currCount = 1
+                            collection.get()
+                                .addOnSuccessListener { querySnapshot ->
+                                    for (document in querySnapshot) {
+                                        val documentData = document.data
+                                        currCount += (documentData["votes"] as String).toInt()
+                                    }
                                 }
-                            }
-                        dayScreenViewModel.addVote(selectedOption.value)
+                            dayScreenViewModel.addVote(selectedOption.value)
+                        }
+                    ) {
+                        Text("Vote")
                     }
-                ) {
-                    Text("Vote")
                 }
-            }
-//            while(dayScreenViewModel.countVotes() < (playerListState.value as DayScreenUIState.Success).playerNames.size){
-//
-//            }
-            Text("Vote Count: $currCount")
+                Text("Vote Count: $currCount")
 //            if (voteState.value is DayScreenUIState.Success2) {
 //                val voteCount = (voteState.value as DayScreenUIState.Success2).count
 //                val user =
 //                Text(dayScreenViewModel.getResult(user))
 //            }
-            Button(onClick = {
-                if (voteState.value is DayScreenUIState.Success2) {
-                    res = (voteState.value as DayScreenUIState.Success2).res
-                    Log.d("res", res)
+                Button(onClick = {
+                    if (voteState.value is DayScreenUIState.Success2) {
+                        res = (voteState.value as DayScreenUIState.Success2).res
+                        Log.d("res", res)
+                    }
+                }) {
+                    Text("Reveal Winner when Vote Count is ${playerCount}")
                 }
-            }) {
-                Text("Reveal Winner when Vote Count is ${playerCount}")
+                if (res != "") {
+                    Text(res)
+                }
+                Button(onClick = {
+                    dayScreenViewModel.deletePlayers()
+                    onReset()
+                }) {
+                    Text("New Game")
+                }
             }
-            if (res != "") {
-                Text(res)
-            }
-            Button(onClick = {
-                dayScreenViewModel.deletePlayers()
-                onReset()
-            }) {
-                Text("New Game")
+
+            Box(modifier = Modifier.weight(if (isChatUIExpanded) 1f else 0.05f)) {
+                ChatUI(
+                    currentUserId = dayScreenViewModel.currentUserId,
+                    // Pass the isChatUIExpanded state to the ChatUI function
+                    isChatUIExpanded = isChatUIExpanded
+                ) { isChatUIExpanded = !isChatUIExpanded }
             }
         }
     }

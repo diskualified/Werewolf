@@ -25,146 +25,166 @@ import androidx.compose.material.icons.filled.Logout
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.sp
+import com.google.firebase.firestore.FirebaseFirestore
 import hu.ait.werewolf.navigation.Screen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
-    onWriteNewPostClick: () -> Unit = {},
     onLogout: () -> Unit = {},
     toNight : () -> Unit = {},
     mainScreenViewModel : MainScreenViewModel = viewModel()
 ) {
-    val snackbarHostState = remember { SnackbarHostState() }
-    val postListState =
-        mainScreenViewModel.postsList().collectAsState(initial = MainScreenUIState.Init)
+//    val snackbarHostState = remember { SnackbarHostState() }
+//    val postListState =
+//        mainScreenViewModel.postsList().collectAsState(initial = MainScreenUIState.Init)
     val roleListState =
         mainScreenViewModel.rolesList().collectAsState(initial = MainScreenUIState.Init)
     var expanded by remember { mutableStateOf(false) }
     var selectedOption by remember { mutableStateOf("Villager") }
+    var lobbySize by remember { mutableStateOf(0) }
+    var roleNum by remember { mutableStateOf(0) }
+    var isChatUIExpanded by remember { mutableStateOf(false) }
+    val collection = FirebaseFirestore.getInstance().collection("activeUsers")
 
+    collection.get().addOnSuccessListener {
+        lobbySize = it.documents.size
+        roleNum = lobbySize
+    }
 
     Scaffold(
         topBar = { MainTopBar(title = "AIT Werewolf", onLogout) },
-        floatingActionButton = {
-            MainFloatingActionButton(
-                onWriteNewPostClick = onWriteNewPostClick,
-                snackbarHostState = snackbarHostState
-            )
-        }
+//        floatingActionButton = {
+//            MainFloatingActionButton(
+//                onWriteNewPostClick = onWriteNewPostClick,
+//                snackbarHostState = snackbarHostState
+//            )
+//        }
     ) { contentPadding ->
         // Screen content
         Column(modifier = Modifier.padding(contentPadding)) {
-            Text("Username: ${mainScreenViewModel.currentUser}")
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(32.dp)
-            ) {
-                OutlinedButton(
-                    onClick = { expanded = true },
-                    modifier = Modifier.fillMaxWidth()
+            Column(modifier = Modifier.weight(if (isChatUIExpanded) 0.05f else 1.0f)) {
+                Text("Username: ${mainScreenViewModel.currentUser}")
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
                 ) {
-                    Text(selectedOption)
-                }
+                    OutlinedButton(
+                        onClick = { expanded = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(selectedOption)
+                    }
 
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    DropdownMenuItem(
-                        onClick = {
-                            selectedOption = "Villager"
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        DropdownMenuItem(
+                            onClick = {
+                                selectedOption = "Villager"
+                                expanded = false
+                            },
+                            text = { Text(text = "Villager") }
+                        )
+                        DropdownMenuItem(onClick = {
+                            selectedOption = "Werewolf"
                             expanded = false
                         },
-                        text = { Text(text = "Villager") }
-                    )
-                    DropdownMenuItem(onClick = {
-                        selectedOption = "Werewolf"
-                        expanded = false
-                    },
-                        text = { Text("Werewolf") })
+                            text = { Text("Werewolf") })
 
-                    DropdownMenuItem(onClick = {
-                        selectedOption = "Troublemaker"
-                        expanded = false
-                    }, text = { Text("Troublemaker") }
-                    )
+                        DropdownMenuItem(onClick = {
+                            selectedOption = "Troublemaker"
+                            expanded = false
+                        }, text = { Text("Troublemaker") }
+                        )
+                    }
                 }
-            }
 
-                Button(onClick = {
-                    mainScreenViewModel.uploadRole(selectedOption)
-                }) {
-                    Text(text = "Add Role")
+                Row(Modifier.fillMaxWidth()) {
+                    Button(onClick = {
+                        mainScreenViewModel.uploadRole(selectedOption)
+                    }, modifier=Modifier.padding(start = 5.dp)) {
+                        Text(text = "Add Role")
+                    }
+                    Button(onClick = {
+                        mainScreenViewModel.assign()
+                        toNight()
+                    }, modifier=Modifier.padding(start = 5.dp)) {
+                        Text("Start Game")
+                    }
+                    Button(onClick = {
+                        mainScreenViewModel.deleteRoles()
+                    }, modifier=Modifier.padding(start = 5.dp)) {
+                        Text("Reset Roles")
+                    }
                 }
-                Button(onClick = {
-                    mainScreenViewModel.assign()
-                    toNight()
-                }) {
-                    Text("Assign Roles")
-                }
-//            Button(onClick = {
-//                mainScreenViewModel.logout()
-//            }) {
-//                Text(text="Delete user")
-//            }
 
                 Text("Roles: ")
+                Text("$roleNum more roles required")
 
                 if (roleListState.value is MainScreenUIState.Success2) {
                     //Text(text = "Messages number: " +
                     //        "${(postListState.value as MainScreenUIState.Success).postList.size}")
-
+                    roleNum = lobbySize - (roleListState.value as MainScreenUIState.Success2).roleList.size
                     LazyColumn() {
                         items((roleListState.value as MainScreenUIState.Success2).roleList) {
                             Text(it)
                         }
                     }
                 }
+            }
+            // Message
+            Column(modifier = Modifier.weight(if (isChatUIExpanded) 1.0f else 0.05f)) {
+                ChatUI(
+                    currentUserId = mainScreenViewModel.currentUserId,
+                    isChatUIExpanded = isChatUIExpanded
+                ) { isChatUIExpanded = !isChatUIExpanded }
+            }
 
-                if (postListState.value == MainScreenUIState.Init) {
-                    Text("initializing")
-                } else if (postListState.value is MainScreenUIState.Success) {
-                    //Text(text = "Messages number: " +
-                    //        "${(postListState.value as MainScreenUIState.Success).postList.size}")
-
-                    LazyColumn() {
-                        items((postListState.value as MainScreenUIState.Success).postList.sortedBy { it.post.time }) {
-                            MessageCard(
-                                post = it.post,
-                                currentUserId = mainScreenViewModel.currentUserId
-                            )
-                        }
-                    }
-                }
+//                if (postListState.value == MainScreenUIState.Init) {
+//                    Text("initializing")
+//                } else if (postListState.value is MainScreenUIState.Success) {
+//                    //Text(text = "Messages number: " +
+//                    //        "${(postListState.value as MainScreenUIState.Success).postList.size}")
+//
+//                    LazyColumn() {
+//                        items((postListState.value as MainScreenUIState.Success).postList.sortedBy { it.post.time }) {
+//                            MessageCard(
+//                                post = it.post,
+//                                currentUserId = mainScreenViewModel.currentUserId
+//                            )
+//                        }
+//                    }
+//                }
             }
         }
     }
 
 
 
-@Composable
-fun MainFloatingActionButton(
-    onWriteNewPostClick: () -> Unit = {},
-    snackbarHostState: SnackbarHostState
-) {
-    val coroutineScope = rememberCoroutineScope()
-
-    FloatingActionButton(
-        onClick = {
-            onWriteNewPostClick()
-        },
-        containerColor = MaterialTheme.colorScheme.secondary,
-        shape = RoundedCornerShape(16.dp),
-    ) {
-        Icon(
-            imageVector = Icons.Rounded.Add,
-            contentDescription = "Add",
-            tint = Color.White,
-        )
-    }
-}
+//@Composable
+//fun MainFloatingActionButton(
+//    onWriteNewPostClick: () -> Unit = {},
+//    snackbarHostState: SnackbarHostState
+//) {
+//    val coroutineScope = rememberCoroutineScope()
+//
+//    FloatingActionButton(
+//        onClick = {
+//            onWriteNewPostClick()
+//        },
+//        containerColor = MaterialTheme.colorScheme.secondary,
+//        shape = RoundedCornerShape(16.dp),
+//    ) {
+//        Icon(
+//            imageVector = Icons.Rounded.Add,
+//            contentDescription = "Add",
+//            tint = Color.White,
+//        )
+//    }
+//}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -193,55 +213,55 @@ fun MainTopBar(title: String,
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun MessageCard(
-    post: Post,
-    currentUserId: String = ""
-) {
-    val isMine by remember {
-        mutableStateOf(currentUserId == post.uid)
-    }
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 4.dp),
-        horizontalAlignment = when { // 2
-            isMine -> Alignment.End
-            else -> Alignment.Start
-        },
-    ) {
-        Card(
-            modifier = Modifier.widthIn(max = 340.dp),
-            shape = cardShapeFor(post.body, isMine),
-            colors = when {
-                isMine -> CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                )
-                else -> CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.secondary,
-                )
-            },
-        ) {
-            Text(
-                modifier = Modifier.padding(8.dp),
-                text = post.body
-            )
-        }
-        Text(
-            // 4
-            text = post.author,
-            fontSize = 12.sp,
-        )
-    }
-}
-
-
-@Composable
-fun cardShapeFor(message: String, isMine: Boolean): Shape {
-    val roundedCorners = RoundedCornerShape(16.dp)
-    return when {
-        isMine -> roundedCorners.copy(bottomEnd = CornerSize(0))
-        else -> roundedCorners.copy(bottomStart = CornerSize(0))
-    }
-}
+//@OptIn(ExperimentalMaterial3Api::class)
+//@Composable
+//fun MessageCard(
+//    post: Post,
+//    currentUserId: String = ""
+//) {
+//    val isMine by remember {
+//        mutableStateOf(currentUserId == post.uid)
+//    }
+//    Column(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .padding(horizontal = 8.dp, vertical = 4.dp),
+//        horizontalAlignment = when { // 2
+//            isMine -> Alignment.End
+//            else -> Alignment.Start
+//        },
+//    ) {
+//        Card(
+//            modifier = Modifier.widthIn(max = 340.dp),
+//            shape = cardShapeFor(post.body, isMine),
+//            colors = when {
+//                isMine -> CardDefaults.cardColors(
+//                    containerColor = MaterialTheme.colorScheme.primary,
+//                )
+//                else -> CardDefaults.cardColors(
+//                    containerColor = MaterialTheme.colorScheme.secondary,
+//                )
+//            },
+//        ) {
+//            Text(
+//                modifier = Modifier.padding(8.dp),
+//                text = post.body
+//            )
+//        }
+//        Text(
+//            // 4
+//            text = post.author,
+//            fontSize = 12.sp,
+//        )
+//    }
+//}
+//
+//
+//@Composable
+//fun cardShapeFor(message: String, isMine: Boolean): Shape {
+//    val roundedCorners = RoundedCornerShape(16.dp)
+//    return when {
+//        isMine -> roundedCorners.copy(bottomEnd = CornerSize(0))
+//        else -> roundedCorners.copy(bottomStart = CornerSize(0))
+//    }
+//}

@@ -119,5 +119,11 @@ class DayScreenViewModel : ViewModel() {
                 collection2.document(document.id).delete()
             }
         }
+        val collection3 = FirebaseFirestore.getInstance().collection("posts")
+        collection3.get().addOnSuccessListener {
+            for (document in it.documents) {
+                collection3.document(document.id).delete()
+            }
+        }
     }
 }
