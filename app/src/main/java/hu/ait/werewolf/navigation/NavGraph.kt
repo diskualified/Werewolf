@@ -47,6 +47,9 @@ fun NavGraph(
             DayScreen(
                 onWriteNewPostClick = {
                     navController.navigate(Screen.WritePost.route)
+                },
+                onReset = {
+                    navController.navigate((Screen.Main.route))
                 }
             )
         }

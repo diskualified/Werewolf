@@ -10,6 +10,7 @@ import com.google.firebase.ktx.Firebase
 import hu.ait.werewolf.data.*
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.tasks.await
 
 
 sealed interface DayScreenUIState {
@@ -105,33 +106,18 @@ class DayScreenViewModel : ViewModel() {
             }
         }
 
-    fun getResult(user : String) =
-        callbackFlow {
-            val snapshotListener =
-            FirebaseFirestore.getInstance().collection("players")
-                .addSnapshotListener() { snapshot, e ->
-                    val response = if (snapshot != null) {
-                        var msg = ""
-                        val playerList = snapshot.toObjects(Player::class.java)
-                        playerList.forEachIndexed { index, player ->
-                            if (player.name == user) {
-                                if (player.role == "Werewolf") {
-                                    msg = "Villagers Win"
-                                } else {
-                                    msg = "Werewolves Win"
-                                }
-                            }
-                        }
-                        DayScreenUIState.Success2(
-                            msg
-                        )
-                    } else {
-                        DayScreenUIState.Error(e?.message.toString())
-                    }
-                    trySend(response)
-                }
-            awaitClose {
-                snapshotListener.remove()
+    fun deletePlayers() {
+        val collection = FirebaseFirestore.getInstance().collection("players")
+        collection.get().addOnSuccessListener {
+            for (document in it.documents) {
+                collection.document(document.id).delete()
             }
         }
+        val collection2 = FirebaseFirestore.getInstance().collection("roles")
+        collection2.get().addOnSuccessListener {
+            for (document in it.documents) {
+                collection2.document(document.id).delete()
+            }
+        }
+    }
 }

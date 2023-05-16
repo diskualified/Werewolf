@@ -19,6 +19,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 @Composable
 fun DayScreen(
     onWriteNewPostClick: () -> Unit = {},
+    onReset: () -> Unit = {},
     dayScreenViewModel:DayScreenViewModel = viewModel()
 ) {
     val voteState = dayScreenViewModel.findMaxVotes().collectAsState(initial = DayScreenUIState.Init)
@@ -30,6 +31,9 @@ fun DayScreen(
     val collection = FirebaseFirestore.getInstance().collection("players")
     var playerCount by remember {
         mutableStateOf(0)
+    }
+    var res by remember {
+        mutableStateOf("")
     }
 //    val isSelectedItem: (String) -> Boolean = { selectedValue.value == it }
 //    val onChangeState: (String) -> Unit = { selectedValue.value = it }
@@ -91,11 +95,20 @@ fun DayScreen(
 //            }
             Button(onClick = {
                 if (voteState.value is DayScreenUIState.Success2) {
-                    val res = (voteState.value as DayScreenUIState.Success2).res
+                    res = (voteState.value as DayScreenUIState.Success2).res
                     Log.d("res", res)
                 }
             }) {
                 Text("Reveal Winner when Vote Count is ${playerCount}")
+            }
+            if (res != "") {
+                Text(res)
+            }
+            Button(onClick = {
+                dayScreenViewModel.deletePlayers()
+                onReset()
+            }) {
+                Text("New Game")
             }
         }
     }
