@@ -106,9 +106,6 @@ fun MessageCard(
     post: Post,
 ) {
 
-//    val isMine by remember {
-//        mutableStateOf(true)
-//    }
     Column(
         modifier = Modifier
             .fillMaxWidth()

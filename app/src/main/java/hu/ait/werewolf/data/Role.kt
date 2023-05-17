@@ -2,8 +2,7 @@ package hu.ait.werewolf.data
 
 import com.google.firebase.firestore.FirebaseFirestore
 
-public val allRolesStr = listOf("villager", "werewolf", "robber", "troublemaker")
-public val allRoles = listOf(Role.Villager, Role.Werewolf, Role.Robber, Role.Troublemaker)
+public val allRolesStr = listOf("villager", "werewolf", "robber", "troublemaker", "seer")
 sealed class Role {
     // Add role-specific actions and state management
 
@@ -37,13 +36,11 @@ sealed class Role {
                 }
             }
         }
+
+
     }
 }
 
-enum class Team {
-    Villagers,
-    Werewolves
-}
 
 data class Player(
     val id: String = "",
@@ -51,17 +48,3 @@ data class Player(
     var role: String = "",
     var votes: String = "0"
 )
-
-data class Message(
-    val id: String = "",
-    val senderId: String = "",
-    val senderName: String = "",
-    val content: String = "",
-    val timestamp: Long = 0L
-)
-
-enum class GameState {
-    SETUP, NIGHT, DAY, VOTE, GAME_OVER
-}
-
-data class NightAction(val playerId: Int, val targetPlayerId: Int? = null, val targetPlayerId2: Int? = null)

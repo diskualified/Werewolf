@@ -1,6 +1,5 @@
 package hu.ait.werewolf.ui.screen
 
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -8,7 +7,6 @@ import androidx.lifecycle.ViewModel
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
-import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.tasks.await
 
@@ -22,11 +20,7 @@ sealed interface LoginUiState {
 class LoginViewModel() : ViewModel() {
     var loginUiState: LoginUiState by mutableStateOf(LoginUiState.Init)
 
-    private lateinit var auth: FirebaseAuth
-
-    init {
-        auth = Firebase.auth
-    }
+    private var auth: FirebaseAuth = Firebase.auth
 
     fun registerUser(email: String, password: String) {
         loginUiState = LoginUiState.Loading

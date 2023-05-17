@@ -43,12 +43,7 @@ class WritePostViewModel: ViewModel() {
     }
 
     var writePostUiState: WritePostUiState by mutableStateOf(WritePostUiState.Init)
-    private lateinit var auth: FirebaseAuth
-
-    init {
-        //auth = FirebaseAuth.getInstance()
-        auth = Firebase.auth
-    }
+    private var auth: FirebaseAuth = Firebase.auth
 
     fun uploadPost(
         title: String, postBody: String, imgUrl: String = ""

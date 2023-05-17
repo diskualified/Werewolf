@@ -19,10 +19,6 @@ sealed interface ChatUIState {
 
 class ChatViewModel : ViewModel() {
 
-//    var currentUser: String = Firebase.auth.currentUser!!.email!!
-//    var currentUserId: String = Firebase.auth.currentUser!!.uid
-
-
     fun postsList() = callbackFlow {
         val snapshotListener =
             FirebaseFirestore.getInstance().collection(WritePostViewModel.COLLECTION_POSTS)

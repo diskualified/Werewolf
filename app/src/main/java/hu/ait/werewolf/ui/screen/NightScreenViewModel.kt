@@ -19,14 +19,6 @@ sealed interface NightScreenUIState {
 }
 class NightScreenViewModel : ViewModel() {
 
-    var currentUser: String
-    var currentUserId: String
-
-    init {
-        currentUser = Firebase.auth.currentUser!!.email!!
-        currentUserId = Firebase.auth.currentUser!!.uid
-    }
-
     fun activePlayersList() = callbackFlow {
         val snapshotListener = FirebaseFirestore.getInstance()
             .collection("players")

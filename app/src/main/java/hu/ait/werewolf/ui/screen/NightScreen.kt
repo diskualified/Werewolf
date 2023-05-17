@@ -1,22 +1,25 @@
 package hu.ait.werewolf.ui.screen
 
+import hu.ait.werewolf.R
 import android.util.Log
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -33,6 +36,7 @@ fun NightScreen(
     var role by remember {
         mutableStateOf("")
     }
+
     val collection = FirebaseFirestore.getInstance().collection("players")
     val query = collection.whereEqualTo("id", currentUserId)
     val playerListState = nightScreenViewModel.activePlayersList().collectAsState(initial = NightScreenUIState.Init)
@@ -57,6 +61,7 @@ fun NightScreen(
             "Villager" -> VillagerCard()
             "Werewolf" -> WerewolfCard()
             "Troublemaker" -> TroublemakerCard(currentUserId, playersList)
+            "Seer" -> SeerCard(playerId = currentUserId, playersList = playersList)
         }
 
         Button(onClick = { toDay() }) {
@@ -67,7 +72,26 @@ fun NightScreen(
 
 @Composable
 fun VillagerCard() {
-    Text("Sleep, you are a villager")
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        val image: Painter = painterResource(R.drawable.villager )
+        Image(
+            painter = image,
+            contentDescription = "Villager Image",
+            modifier = Modifier
+                .size(100.dp)
+                .clip(RoundedCornerShape(12.dp))
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "Sleep, you are a villager",
+            style = TextStyle(fontSize = 20.sp)
+        )
+    }
 }
 
 @Composable
@@ -87,14 +111,129 @@ fun WerewolfCard() {
         }
         wolvesLoaded = true
     }
+
     if (wolvesLoaded) {
-        Column() {
-            Text("Werewolf Team:")
-            LazyColumn() {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "Werewolf Team:",
+                style = TextStyle(
+                    fontSize = 24.sp,
+                    color = Color.Red
+                )
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            LazyColumn(
+                modifier = Modifier.padding(horizontal = 8.dp)
+            ) {
                 items(wolves) {
-                    Text(it)
+                    Text(
+                        text = it,
+                        style = TextStyle(
+                            fontSize = 20.sp,
+                            color = Color.Black
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
                 }
             }
+            Spacer(modifier = Modifier.height(8.dp))
+            val image: Painter = painterResource(R.drawable.werewolf )
+            Image(
+                painter = image,
+                contentDescription = "Werewolf Image",
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(RoundedCornerShape(12.dp))
+            )
+        }
+    }
+}
+
+@Composable
+fun SeerCard(playerId: String, playersList: List<Player>) {
+    var selectedRole by remember { mutableStateOf("") }
+    var selectedPlayerName by remember { mutableStateOf("") }
+    var revealState by remember {
+        mutableStateOf(false)
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "You are the seer. Choose the player whose roles you'd like to see.",
+            style = TextStyle(
+                fontSize = 20.sp,
+                color = Color.Blue
+            )
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        LazyColumn(
+            modifier = Modifier.padding(horizontal = 8.dp)
+        ) {
+            items(playersList) {
+                if (playerId != it.id) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "Select ${it.name}",
+                            style = TextStyle(
+                                fontSize = 18.sp,
+                                color = Color.Black
+                            )
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        RadioButton(
+                            selected = selectedRole == it.role,
+                            onClick = {
+                                if (!revealState) {
+                                    selectedRole = it.role
+                                    selectedPlayerName = it.name
+                                }
+                            },
+                        )
+                    }
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        val image: Painter = painterResource(R.drawable.seer)
+        Image(
+            painter = image,
+            contentDescription = "Seer Image",
+            modifier = Modifier
+                .size(100.dp)
+                .clip(RoundedCornerShape(12.dp))
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Button(
+            onClick = {
+                if (selectedRole != "") {
+                    revealState = true
+                }
+            }
+        ) {
+            Text(text = "Reveal Role")
+        }
+
+        if (revealState) {
+            Text(
+                text = "$selectedPlayerName's role is $selectedRole!",
+                style = TextStyle(
+                    fontSize = 20.sp,
+                    color = Color.Red
+                )
+            )
         }
     }
 }
@@ -113,16 +252,40 @@ fun TroublemakerCard(playerId: String, playersList: List<Player>) {
         mutableStateOf(false)
     }
 
-    Column() {
-        Text(text = "You are troublemaker. Choose the players whose roles you'd like to swap.")
-        LazyColumn() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "You are troublemaker. Choose the players whose roles you'd like to swap.",
+            style = TextStyle(
+                fontSize = 20.sp,
+                color = Color.Black
+            )
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        LazyColumn(
+            modifier = Modifier.padding(horizontal = 8.dp)
+        ) {
             items(playersList) {
                 if (playerId != it.id) {
                     var checked by remember {
                         mutableStateOf(false)
                     }
-                    Row() {
-                        Text(text = "Select ${it.name}", modifier = Modifier.align(Alignment.CenterVertically))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "Select ${it.name}",
+                            style = TextStyle(
+                                fontSize = 18.sp,
+                                color = Color.Black
+                            )
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
                         Checkbox(
                             checked = checked,
                             onCheckedChange = { checkedState ->
@@ -132,21 +295,28 @@ fun TroublemakerCard(playerId: String, playersList: List<Player>) {
                                     swappedPlayers - it
                                 }
                                 checked = checkedState
-                                Log.d("swappedPlayers", swappedPlayers.toString())
                             }
                         )
                     }
                 }
             }
         }
-
-        Button(onClick = {
+        Spacer(modifier = Modifier.height(8.dp))
+        val image: Painter = painterResource(R.drawable.troublemaker )
+        Image(
+            painter = image,
+            contentDescription = "Troublemaker Image",
+            modifier = Modifier
+                .size(100.dp)
+                .clip(RoundedCornerShape(12.dp))
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        if (!swapped) Button(onClick = {
             errorState = (swappedPlayers.size != 2)
             if (!errorState) {
                 Role.Troublemaker.swap(swappedPlayers[0], swappedPlayers[1])
             }
             swapped = true
-            Log.d("error state", errorState.toString())
         }) {
             Text("Swap")
         }
