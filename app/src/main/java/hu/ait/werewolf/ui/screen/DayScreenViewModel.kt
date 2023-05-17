@@ -67,6 +67,32 @@ class DayScreenViewModel : ViewModel() {
         }
     }
 
+    fun countVotes() =
+        callbackFlow {
+            val snapshotListener =
+                FirebaseFirestore.getInstance().collection("players")
+                    .addSnapshotListener() { snapshot, e ->
+                        val response = if (snapshot != null) {
+                            val voteList = snapshot.toObjects(Player::class.java)
+                            var voteCount = 0
+                            voteList.forEachIndexed { index, player ->
+                                voteCount += player.votes.toInt()
+                            }
+                            DayScreenUIState.Success2(
+                                voteCount.toString()
+                            )
+                        } else {
+                            DayScreenUIState.Error(e?.message.toString())
+                        }
+                        trySend(response)
+                    }
+            awaitClose {
+                snapshotListener.remove()
+            }
+        }
+
+
+
     fun findMaxVotes() =
         callbackFlow {
             val snapshotListener =

@@ -147,7 +147,12 @@ class MainScreenViewModel : ViewModel() {
                                     name = emailList[i],
                                     role = roleList[arr[i]]
                                 )
-                                FirebaseFirestore.getInstance().collection("players").add(player)
+                                val col = FirebaseFirestore.getInstance().collection("players")
+                                col.whereEqualTo("uid", Firebase.auth.currentUser!!.uid).get().addOnSuccessListener {
+                                    if (it.documents.size == 0) {
+                                        col.add(player)
+                                    }
+                                }
                             }
                         }
                     }

@@ -30,6 +30,7 @@ fun DayScreen(
         dayScreenViewModel.playerList().collectAsState(initial = DayScreenUIState.Init)
     var selectedOption = remember { mutableStateOf("") }
     var currCount by remember { mutableStateOf(0) }
+    val votecountState = dayScreenViewModel.countVotes().collectAsState(initial = DayScreenUIState.Init)
     val collection = FirebaseFirestore.getInstance().collection("players")
     var playerCount by remember {
         mutableStateOf(0)
@@ -82,6 +83,7 @@ fun DayScreen(
                         Text("Vote")
                     }
                 }
+
                 Text("Vote Count: $currCount")
 //            if (voteState.value is DayScreenUIState.Success2) {
 //                val voteCount = (voteState.value as DayScreenUIState.Success2).count
